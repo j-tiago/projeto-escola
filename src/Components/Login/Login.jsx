@@ -11,8 +11,8 @@ const Login = () => {
     const handleSubmit = (event) => {
         event.preventDefault();
 
-        alert("Enviando dados..." + username + " " + password);
-    }
+        console.log("Dados de Login:", { username, password });
+  };
 
   return (
     <div className="container">
