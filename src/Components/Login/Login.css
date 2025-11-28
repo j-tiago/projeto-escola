@@ -1,8 +1,8 @@
 .container {
     width: 450px;
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255);
     backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255);
     padding: 40px;
     border-radius: 10px;
 }
@@ -10,7 +10,7 @@
 .container h1 {
     text-align: center;
     font-size: 30px;
-    color: #fff;
+    color: #000000;
 }
 
 .container .input-field {
@@ -25,27 +25,27 @@
     height: 100%;
     background-color: transparent;
     outline: none;
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    border: 2px solid rgba(37, 37, 37, 0.5);
     border-radius: 40px;
     font-size: 16px;
-    color: #fff;
+    color: #000000;
     padding: 20px 40px;
     
 }
 
 input::placeholder {
-  color: #fff;
-  opacity: 0.6;
+    color: #373737;
+    opacity: 0.6;
 }
 
 
 .input-field .icon {
     position: absolute;
-   right: 25px;
-   top: 50%;
-   transform: translateY(-50%);
-   font-size: 18px;
-    color: #fff;
+    right: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #373737;
 }
 
 .container .recall-forget {
@@ -56,7 +56,7 @@ input::placeholder {
 }
 
 .recall-forget label {
-  color: #fff;
+  color: #000000;
 }
 
 .recall-forget input {
@@ -64,7 +64,7 @@ input::placeholder {
 }
 
 .recall-forget a, .signup-link p a  {
-    color: #fff;
+    color: #000000;
     text-decoration: none;
 }
 
@@ -73,6 +73,7 @@ input::placeholder {
 }
 
 .container button {
+    color: white;
     width: 50%;
     display: block;
     margin: 0 auto;
@@ -80,7 +81,7 @@ input::placeholder {
     border: none;
     outline: none;
     border-radius: 40px;
-    background-color: #fff;
+    background-color: #007bff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     font-size: 16px;

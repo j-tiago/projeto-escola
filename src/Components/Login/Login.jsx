@@ -1,6 +1,7 @@
 import { FaUser, FaLock } from "react-icons/fa";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 import "./Login.css";
 
@@ -10,15 +11,38 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-
-    console.log("Dados de Login:", { username, password });
-
-    if (username && password) {
-      navigate("/home");
-    } else {
+    if (!username || !password) {
       alert("Preencha os campos corretamente.");
+      return;
+    }
+
+    try {
+      const url = "https://apiteste.mobieduca.me/api/login/run";     
+      const response = await axios.post(url, {
+        email: username, 
+        senha: password
+      });
+
+      console.log("Sucesso!", response.data);
+
+      const token = response.data.token || response.data.accessToken;
+      
+      if (token) {
+          localStorage.setItem("meu_token", token);
+      }
+
+      navigate("/home");
+
+    } catch (error) {
+      if (error.response) {
+        console.log("Status:", error.response.status);
+        console.log("Mensagem da API:", error.response.data); 
+        alert(JSON.stringify(error.response.data)); 
+      }
+      
+      console.error("Erro no login:", error);
     }
   };
 
@@ -28,8 +52,9 @@ const Login = () => {
         <h1>Faça o Login</h1>
         <div className="input-field">
           <input
-            type="email"
+            type="email" 
             placeholder="E-mail"
+            value={username} 
             onChange={(e) => setUsername(e.target.value)}
           />
           <FaUser className="icon" />
@@ -38,6 +63,7 @@ const Login = () => {
           <input
             type="password"
             placeholder="Senha"
+            value={password} 
             onChange={(e) => setPassword(e.target.value)}
           />
           <FaLock className="icon" />
@@ -51,11 +77,11 @@ const Login = () => {
           <a href="#">Esqueci minha senha</a>
         </div>
 
-        <button type="submit">Entrar</button>
+        <button type="submit" className="entrar">Entrar</button>
 
         <div className="signup-link">
           <p>
-            Não tem uma conta? <a href="#">Registrar</a>
+            Não tem uma conta? <Link to="/cadastro">Registrar</Link>
           </p>
         </div>
       </form>

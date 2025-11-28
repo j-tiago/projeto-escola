@@ -1,20 +1,139 @@
 .inicio-container {
-    background-color: aliceblue;
-    width: 600px;
-    padding: 350px;
-    border: 2px solid #000;
-    border-radius: 15px;
-}
-
-.lista-simples {
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f3f4f6; 
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  color: #1f2937;
   display: flex;
   flex-direction: column;
-  gap: 0px;
 }
 
-.linha {
-  padding: 10px;
-  width: 100%;  
-  background-color: #f2f2f2;
-  border: 1px solid #ccc;
+.inicio-header {
+  width: 100%;
+  background-color: #ffffff;
+  height: 70px;
+  padding: 0 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.inicio-header h1 {
+  font-size: 1.5rem;
+  color: #111827;
+  font-weight: 600;
+  margin: 0;
+}
+
+.btn-sair {
+  background-color: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 8px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-sair:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+.inicio-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  flex: 1;
+}
+
+.titulo-secao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.titulo-secao h2 {
+  font-size: 1.8rem;
+  color: #374151;
+}
+
+.titulo-secao p {
+  background-color: #e5e7eb;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #4b5563;
+}
+
+.empty-state {
+  background-color: white;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+  border: 2px #d1d5db;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.empty-state p {
+  font-size: 1.25rem;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.empty-state small {
+  color: #9ca3af;
+}
+
+.lista-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+  gap: 24px;
+}
+
+.escola-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.escola-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: #f9fafb;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.card-header h3 {
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.card-body p {
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.card-body strong {
+  color: #374151;
 }
