@@ -1,10 +1,10 @@
-import "./App.css";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import Login from "./Components/Login/Login";
+import Login from "./Components/Login/Login.jsx";
 import Cadastro from "./Components/Cadastro/Cadastro.jsx";
-import Inicio from "./Components/Inicio/Inicio";
-import CadastroEscola from "./Components/CadastroEscola/CadastroEscola";
+import Inicio from "./Components/Inicio/Inicio.jsx";
+import CadastroEscola from "./Components/CadastroEscola/CadastroEscola.jsx";
 
 function App() {
   return (

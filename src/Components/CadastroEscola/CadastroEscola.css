@@ -10,7 +10,7 @@
 }
 
 .form-card {
-  background: white;
+  background: #ffffff;
   padding: 40px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -26,12 +26,14 @@
 }
 
 .card-header-title h2 {
-  color: #1f2937;
-  font-size: 1.8rem;
+  font-family: 'Inter', 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+  color: #006aff;
+  font-size: 28px;
   margin-bottom: 5px;
 }
 
 .card-header-title p {
+    font-family: 'Inter', 'Roboto', 'Segoe UI', Tahoma, sans-serif;
     color: #6b7280;
     font-size: 0.95rem;
 }
@@ -70,7 +72,7 @@
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 1rem;
-  background-color: #fff;
+  background-color: #ffffff;
   transition: border-color 0.2s;
 }
 
@@ -129,7 +131,7 @@
 
 .btn-salvar {
   background-color: #009688;
-  color: white;
+  color: #ffffff;
   border: none;
   padding: 12px 30px;
   border-radius: 6px;
@@ -143,7 +145,7 @@
 }
 
 .btn-cancelar {
-  background-color: white;
+  background-color: #ffffff;
   color: #6b7280;
   border: 1px solid #d1d5db;
   padding: 12px 24px;

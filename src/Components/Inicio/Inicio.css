@@ -27,20 +27,46 @@
   margin: 0;
 }
 
+.btn-novo {
+  background-color: #009688;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-novo:hover {
+  background-color: #00796b;
+  color: white;
+}
+
 .btn-sair {
   background-color: transparent;
   color: #ef4444;
   border: 1px solid #ef4444;
-  padding: 8px 24px;
+  padding: 10px 20px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.95rem;
   transition: all 0.2s;
 }
 
 .btn-sair:hover {
   background-color: #ef4444;
-  color: white;
+  color: #ffffff;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 .inicio-content {
@@ -60,7 +86,7 @@
 
 .titulo-secao h2 {
   font-size: 1.8rem;
-  color: #374151;
+  color: #4b5563;
 }
 
 .titulo-secao p {
@@ -73,7 +99,7 @@
 }
 
 .empty-state {
-  background-color: white;
+  background-color: #ffffff;
   border-radius: 12px;
   padding: 60px;
   text-align: center;
@@ -83,7 +109,7 @@
 
 .empty-state p {
   font-size: 1.25rem;
-  color: #6b7280;
+  color: #4b5563;
   margin-bottom: 10px;
 }
 
@@ -98,7 +124,7 @@
 }
 
 .escola-card {
-  background: white;
+  background: #ffffff;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #e5e7eb;
@@ -112,7 +138,7 @@
 }
 
 .card-header {
-  background-color: #f9fafb;
+  background-color: #ffffff;
   padding: 16px 20px;
   border-bottom: 1px solid #f3f4f6;
 }

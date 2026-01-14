@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./CadastroEscola.css";
+import "./CadastroEscola.css"; // CORREÇÃO: Importando o CSS correto
 
 const CadastroEscola = () => {
   const [nome, setNome] = useState("");
@@ -12,18 +12,28 @@ const CadastroEscola = () => {
   const [turnos, setTurnos] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const buscarCidades = async () => {
-      try {
-        const url = "https://apiteste.mobieduca.me/api/cidades";
-        const response = await axios.get(url);
-        setListaCidades(response.data);
-      } catch (error) {
-        console.error("Erro ao carregar cidades", error);
-      }
-    };
-    buscarCidades();
-  }, []);
+ useEffect(() => {
+  const buscarCidades = async () => {
+    try {
+      const token = localStorage.getItem("meu_token");
+      
+      // A imagem mostra erro 401 se não tiver token, então é obrigatório:
+      if (!token) return; 
+
+      const url = "https://apiteste.mobieduca.me/api/cidades";
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // A imagem mostra que o retorno já é o array [ {id:..}, {id:..} ]
+      setListaCidades(response.data); 
+
+    } catch (error) {
+      console.error("Erro ao carregar cidades", error);
+    }
+  };
+  buscarCidades();
+}, []);
 
   const handleTurnoChange = (valor) => {
     if (turnos.includes(valor)) {
@@ -37,36 +47,28 @@ const CadastroEscola = () => {
     e.preventDefault();
 
     if (turnos.length === 0) {
-      alert("Selecione pelo menos um turno!");
+      alert("Selecione pelo menos um turno.");
       return;
     }
 
+    const payload = {
+      nome,
+      diretor,
+      cidade_id: cidadeId,
+      localizacao,
+      turnos: turnos.join(", ")
+    };
+
     try {
       const token = localStorage.getItem("meu_token");
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const dadosParaAPI = {
-        nome: nome,
-        diretor: diretor,
-        cidade_id: parseInt(cidadeId),
-        localizacao: parseInt(localizacao),
-        turnos: turnos.map(turno => turno.charAt(0)) 
-      };
-
-      console.log("Enviando:", dadosParaAPI); 
-
-      const url = "https://apiteste.mobieduca.me/api/escolas";
-      await axios.post(url, dadosParaAPI, config);
-
-      alert("Escola criada com sucesso!");
+      await axios.post("https://apiteste.mobieduca.me/api/escolas", payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Escola cadastrada com sucesso!");
       navigate("/home");
-
     } catch (error) {
-      console.error("Erro ao cadastrar:", error);
-      if(error.response && error.response.data) {
-          alert("Erro: " + JSON.stringify(error.response.data));
-      } else {
-          alert("Erro ao conectar com o servidor.");
-      }
+      console.error("Erro ao cadastrar escola", error);
+      alert("Erro ao salvar. Verifique o console.");
     }
   };
 
@@ -74,47 +76,43 @@ const CadastroEscola = () => {
     <div className="cadastro-escola-container">
       <div className="form-card">
         <div className="card-header-title">
-            <h2>Cadastrar Nova Escola</h2>
-            <p>Preencha os dados abaixo.</p>
+          <h2>Nova Escola</h2>
+          <p>Preencha os dados para cadastrar uma nova unidade.</p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          
-          <div className="form-row">
-            <div className="form-group flex-2">
-                <label>Nome da Escola <span className="required">*</span></label>
-                <input 
-                  type="text" 
-                  value={nome} 
-                  onChange={(e) => setNome(e.target.value)} 
-                  required 
-                />
-            </div>
-            <div className="form-group flex-1">
-                <label>Diretor</label>
-                <input 
-                  type="text" 
-                  value={diretor} 
-                  onChange={(e) => setDiretor(e.target.value)} 
-                />
-            </div>
+          <div className="form-group">
+            <label>Nome da Escola <span className="required">*</span></label>
+            <input 
+              type="text" 
+              value={nome} 
+              onChange={(e) => setNome(e.target.value)} 
+              required 
+            />
           </div>
 
-          <div className="form-row">
+          <div className="form-group">
+            <label>Nome do Diretor <span className="required">*</span></label>
+            <input 
+              type="text" 
+              value={diretor} 
+              onChange={(e) => setDiretor(e.target.value)} 
+              required 
+            />
+          </div>
+
+          <div className="row">
             <div className="form-group flex-1">
-                <label>Localização <span className="required">*</span></label>
-                <select 
-                    value={localizacao} 
-                    onChange={(e) => setLocalizacao(e.target.value)}
-                    required
-                >
-                    <option value="1">Urbana</option>
-                    <option value="2">Rural</option>
-                </select>
+              <label>Localização <span className="required">*</span></label>
+              <select value={localizacao} onChange={(e) => setLocalizacao(e.target.value)}>
+                <option value="1">Urbana</option>
+                <option value="2">Rural</option>
+              </select>
             </div>
 
             <div className="form-group flex-2">
               <label>Cidade <span className="required">*</span></label>
+              {/* SUBSTITUA O SELECT ANTIGO POR ESTE AQUI */}
               <select 
                 value={cidadeId} 
                 onChange={(e) => setCidadeId(e.target.value)} 
@@ -123,7 +121,8 @@ const CadastroEscola = () => {
                 <option value="">Selecione uma cidade...</option>
                 {listaCidades.map((cidade) => (
                   <option key={cidade.id} value={cidade.id}>
-                    {cidade.nome} - {cidade.estado}
+                    {/* AQUI ESTAVA O ERRO: agora usa .descricao e .estado.sigla */}
+                    {cidade.descricao} - {cidade.estado ? cidade.estado.sigla : "UF"}
                   </option>
                 ))}
               </select>
@@ -153,7 +152,6 @@ const CadastroEscola = () => {
               Salvar Escola
             </button>
           </div>
-
         </form>
       </div>
     </div>

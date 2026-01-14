@@ -6,6 +6,11 @@ import "./Inicio.css";
 const Inicio = () => {
   const [escolas, setEscolas] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Novos estados para paginação
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -23,22 +28,22 @@ const Inicio = () => {
       }
 
       try {
-        const url = "https://apiteste.mobieduca.me/api/escolas";
+        setLoading(true);
+        // Adicionamos o parâmetro ?page= para a API saber qual página queremos
+        const url = `https://apiteste.mobieduca.me/api/escolas?page=${page}`;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         
         const response = await axios.get(url, config);
 
-        console.log("Resposta da API:", response.data);
+        // Debug para confirmar estrutura
+        console.log("Dados da API:", response.data);
 
-        let listaCorreta = [];
+        // 1. A lista real está dentro de response.data.data
+        setEscolas(response.data.data || []);
         
-        if (response.data && Array.isArray(response.data.data)) {
-            listaCorreta = response.data.data;
-        } else if (Array.isArray(response.data)) {
-            listaCorreta = response.data;
-        }
+        // 2. Pegamos o total de páginas para controlar os botões
+        setTotalPages(response.data.last_page || 1);
         
-        setEscolas(listaCorreta);
         setLoading(false);
 
       } catch (error) {
@@ -51,7 +56,16 @@ const Inicio = () => {
     };
 
     buscarDados();
-  }, [navigate]);
+  }, [navigate, page]); // O useEffect roda de novo sempre que 'page' mudar
+
+  // Funções para mudar de página
+  const handlePrevPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
 
   if (loading) {
     return <div className="loading-container">Carregando escolas...</div>;
@@ -75,7 +89,8 @@ const Inicio = () => {
       <main className="inicio-content">
         <div className="titulo-secao">
             <h2>Escolas Cadastradas</h2>
-            <p>Total encontradas: {escolas.length}</p>
+            {/* Mostra em qual página estamos */}
+            <p>Página {page} de {totalPages}</p>
         </div>
         
         {escolas.length === 0 ? (
@@ -83,19 +98,48 @@ const Inicio = () => {
             <p>Nenhuma escola encontrada.</p>
           </div>
         ) : (
-          <div className="lista-grid">
-            {escolas.map((escola) => (
-              <div key={escola.id} className="escola-card">
-                <div className="card-header">
-                    <h3>{escola.nome}</h3>
+          <>
+            <div className="lista-grid">
+              {escolas.map((escola) => (
+                <div key={escola.id} className="escola-card">
+                  <div className="card-header">
+                      <h3>{escola.nome}</h3>
+                  </div>
+                  <div className="card-body">
+                      <p><strong>Diretor:</strong> {escola.diretor || "Não informado"}</p>
+                      {/* CORREÇÃO AQUI: Acessando os objetos conforme o JSON */}
+                      <p><strong>Cidade:</strong> {escola.cidade?.descricao || "Indefinida"}</p>
+                      <p><strong>Estado:</strong> {escola.cidade?.estado?.sigla || "UF"}</p>
+                      <p><strong>Turnos:</strong> {
+                          /* O JSON mostra turnos como array de objetos, vamos tratar isso */
+                          Array.isArray(escola.turnos) 
+                            ? escola.turnos.map(t => t.turno).join(", ") 
+                            : "Não informado"
+                      }</p>
+                  </div>
                 </div>
-                <div className="card-body">
-                    <p><strong>Cidade:</strong> {escola.cidade || "Não informada"}</p>
-                    <p><strong>Estado:</strong> {escola.estado || "UF"}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            {/* CONTROLES DE PAGINAÇÃO */}
+            <div className="pagination-controls">
+                <button 
+                    onClick={handlePrevPage} 
+                    disabled={page === 1}
+                    className="btn-page"
+                >
+                    Anterior
+                </button>
+                <span>{page} / {totalPages}</span>
+                <button 
+                    onClick={handleNextPage} 
+                    disabled={page === totalPages}
+                    className="btn-page"
+                >
+                    Próxima
+                </button>
+            </div>
+          </>
         )}
       </main>
     </div>
