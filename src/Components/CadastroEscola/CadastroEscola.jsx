@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./CadastroEscola.css"; // CORREÇÃO: Importando o CSS correto
+import "./CadastroEscola.css";
 
 const CadastroEscola = () => {
   const [nome, setNome] = useState("");
@@ -17,7 +17,6 @@ const CadastroEscola = () => {
     try {
       const token = localStorage.getItem("meu_token");
       
-      // A imagem mostra erro 401 se não tiver token, então é obrigatório:
       if (!token) return; 
 
       const url = "https://apiteste.mobieduca.me/api/cidades";
@@ -25,7 +24,6 @@ const CadastroEscola = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // A imagem mostra que o retorno já é o array [ {id:..}, {id:..} ]
       setListaCidades(response.data); 
 
     } catch (error) {
@@ -112,7 +110,6 @@ const CadastroEscola = () => {
 
             <div className="form-group flex-2">
               <label>Cidade <span className="required">*</span></label>
-              {/* SUBSTITUA O SELECT ANTIGO POR ESTE AQUI */}
               <select 
                 value={cidadeId} 
                 onChange={(e) => setCidadeId(e.target.value)} 
@@ -121,7 +118,6 @@ const CadastroEscola = () => {
                 <option value="">Selecione uma cidade...</option>
                 {listaCidades.map((cidade) => (
                   <option key={cidade.id} value={cidade.id}>
-                    {/* AQUI ESTAVA O ERRO: agora usa .descricao e .estado.sigla */}
                     {cidade.descricao} - {cidade.estado ? cidade.estado.sigla : "UF"}
                   </option>
                 ))}

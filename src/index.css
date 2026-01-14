@@ -1,27 +1,22 @@
-/* RESET GLOBAL E SUAVIZAÇÃO */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-shadow: none !important; /* Remove o que deixava a fonte 'suja' */
+  text-shadow: none !important;
 }
 
 body {
-  /* Fonte moderna e limpa. Segoe UI é a melhor para Windows */
   font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
-  background-color: #44c2c3; /* Cor azul global */
+  background-color: #44c2c3;
   min-height: 100vh;
 }
 
-/* CLASSE PARA TELAS CENTRALIZADAS (Login e Cadastro) */
-/* No seu index.css */
-
 .auth-page-wrapper {
   display: flex;
-  justify-content: center; /* Centraliza horizontalmente */
-  align-items: center;     /* Centraliza verticalmente */
-  min-height: 100vh;       /* Garante que o container tenha a altura da tela toda */
+  justify-content: center;
+  align-items: center; 
+  min-height: 100vh;    
   width: 100%;
 }
