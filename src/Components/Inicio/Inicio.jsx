@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { FaEdit } from "react-icons/fa";
 import axios from "axios";
 import "./Inicio.css";
 
 const Inicio = () => {
   const [escolas, setEscolas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -23,21 +27,18 @@ const Inicio = () => {
       }
 
       try {
-        const url = "https://apiteste.mobieduca.me/api/escolas";
+        setLoading(true);
+        const url = `https://apiteste.mobieduca.me/api/escolas?page=${page}`;
         const config = { headers: { Authorization: `Bearer ${token}` } };
+        
         const response = await axios.get(url, config);
-        console.log("DEBUG API:", response.data);
-        const lista = response.data.data || response.data;
-        setEscolas(lista);
-        let listaCorreta = [];
+
+        console.log("Dados da API:", response.data);
+
+        setEscolas(response.data.data || []);
         
-        if (response.data && Array.isArray(response.data.data)) {
-            listaCorreta = response.data.data;
-        } else if (Array.isArray(response.data)) {
-            listaCorreta = response.data;
-        }
+        setTotalPages(response.data.last_page || 1);
         
-        setEscolas(listaCorreta);
         setLoading(false);
 
       } catch (error) {
@@ -50,7 +51,14 @@ const Inicio = () => {
     };
 
     buscarDados();
-  }, [navigate]);
+  }, [navigate, page]);
+
+  const handlePrevPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
 
   if (loading) {
     return <div className="loading-container">Carregando escolas...</div>;
@@ -74,7 +82,7 @@ const Inicio = () => {
       <main className="inicio-content">
         <div className="titulo-secao">
             <h2>Escolas Cadastradas</h2>
-            <p>Total encontradas: {escolas.length}</p>
+            <p>Página {page} de {totalPages}</p>
         </div>
         
         {escolas.length === 0 ? (
@@ -82,19 +90,67 @@ const Inicio = () => {
             <p>Nenhuma escola encontrada.</p>
           </div>
         ) : (
-          <div className="lista-grid">
-            {escolas.map((escola) => (
-              <div key={escola.id} className="escola-card">
-                <div className="card-header">
-                    <h3>{escola.nome}</h3>
+          <>
+            <div className="lista-grid">
+              {escolas.map((escola) => (
+                <div key={escola.id} className="escola-card">
+                  <div className="card-header">
+                      <h3>{escola.nome}</h3>
+                      <button 
+                        onClick={() => navigate(`/editar-escola/${escola.id}`)}
+                        className="btn-editar"
+                        style={{ 
+                          marginLeft: 'auto', 
+                          cursor: 'pointer', 
+                          padding: '6px 12px',
+                          fontSize: '0.9rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          backgroundColor: '#fff',
+                          color: '#374151',
+                          display: 'flex',       
+                          alignItems: 'center', 
+                          gap: '6px',            
+                          transition: 'all 0.2s'
+                        }} 
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                      >
+                        <FaEdit /> Editar
+                      </button>
+                  </div>
+                  <div className="card-body">
+                      <p><strong>Diretor:</strong> {escola.diretor || "Não informado"}</p>
+                      <p><strong>Cidade:</strong> {escola.cidade?.descricao || "Indefinida"}</p>
+                      <p><strong>Estado:</strong> {escola.cidade?.estado?.sigla || "UF"}</p>
+                      <p><strong>Turnos:</strong> {
+                          Array.isArray(escola.turnos) 
+                            ? escola.turnos.map(t => t.turno).join(", ") 
+                            : "Não informado"
+                      }</p>
+                  </div>
                 </div>
-                <div className="card-body">
-                    <p><strong>Cidade:</strong> {escola.cidade || "Não informada"}</p>
-                    <p><strong>Estado:</strong> {escola.estado || "UF"}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            
+            <div className="pagination-controls">
+                <button 
+                    onClick={handlePrevPage} 
+                    disabled={page === 1}
+                    className="btn-page"
+                >
+                    Anterior
+                </button>
+                <span>{page} / {totalPages}</span>
+                <button 
+                    onClick={handleNextPage} 
+                    disabled={page === totalPages}
+                    className="btn-page"
+                >
+                    Próxima
+                </button>
+            </div>
+          </>
         )}
       </main>
     </div>

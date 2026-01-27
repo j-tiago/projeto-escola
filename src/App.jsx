@@ -18,6 +18,9 @@ function App() {
           <Route path="/cadastro" element={<Cadastro />} />
 
           <Route path="/nova-escola" element={<CadastroEscola />} />
+
+          <Route path="/editar-escola/:id" element={<CadastroEscola />} />
+
         </Routes>
       </div>
     </Router>
