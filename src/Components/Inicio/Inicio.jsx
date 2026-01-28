@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaEdit } from "react-icons/fa";
 import axios from "axios";
+import { FaEdit } from "react-icons/fa";
 import "./Inicio.css";
 
 const Inicio = () => {
@@ -9,6 +9,7 @@ const Inicio = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalRegistros, setTotalRegistros] = useState(0); 
   
   const navigate = useNavigate();
 
@@ -28,21 +29,20 @@ const Inicio = () => {
 
       try {
         setLoading(true);
+
         const url = `https://apiteste.mobieduca.me/api/escolas?page=${page}`;
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        
         const response = await axios.get(url, config);
-
-        console.log("Dados da API:", response.data);
-
-        setEscolas(response.data.data || []);
-        
+        console.log("Dados Reais da API:", response.data);
+        const listaReais = response.data.data || (Array.isArray(response.data) ? response.data : []);
+        setEscolas(listaReais);
         setTotalPages(response.data.last_page || 1);
+        setTotalRegistros(response.data.total || listaReais.length);
         
         setLoading(false);
 
       } catch (error) {
-        console.error("Erro ao buscar:", error);
+        console.error("Erro ao buscar escolas:", error);
         if (error.response && error.response.status === 401) {
           handleLogout();
         }
@@ -56,12 +56,13 @@ const Inicio = () => {
   const handlePrevPage = () => {
     if (page > 1) setPage(page - 1);
   };
+
   const handleNextPage = () => {
     if (page < totalPages) setPage(page + 1);
   };
 
   if (loading) {
-    return <div className="loading-container">Carregando escolas...</div>;
+    return <div className="loading-container">Carregando dados...</div>;
   }
 
   return (
@@ -82,12 +83,13 @@ const Inicio = () => {
       <main className="inicio-content">
         <div className="titulo-secao">
             <h2>Escolas Cadastradas</h2>
-            <p>Página {page} de {totalPages}</p>
+            <p>Total encontradas: {totalRegistros}</p>
         </div>
         
         {escolas.length === 0 ? (
           <div className="empty-state">
-            <p>Nenhuma escola encontrada.</p>
+            <p>Nenhuma escola encontrada no sistema.</p>
+            <small>Utilize o botão "+ Nova Escola" para começar.</small>
           </div>
         ) : (
           <>
@@ -99,30 +101,15 @@ const Inicio = () => {
                       <button 
                         onClick={() => navigate(`/editar-escola/${escola.id}`)}
                         className="btn-editar"
-                        style={{ 
-                          marginLeft: 'auto', 
-                          cursor: 'pointer', 
-                          padding: '6px 12px',
-                          fontSize: '0.9rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          backgroundColor: '#fff',
-                          color: '#374151',
-                          display: 'flex',       
-                          alignItems: 'center', 
-                          gap: '6px',            
-                          transition: 'all 0.2s'
-                        }} 
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff'}
                       >
                         <FaEdit /> Editar
                       </button>
                   </div>
+                  
                   <div className="card-body">
                       <p><strong>Diretor:</strong> {escola.diretor || "Não informado"}</p>
-                      <p><strong>Cidade:</strong> {escola.cidade?.descricao || "Indefinida"}</p>
-                      <p><strong>Estado:</strong> {escola.cidade?.estado?.sigla || "UF"}</p>
+                      <p><strong>Cidade:</strong> {escola.cidade ? escola.cidade.descricao : "Indefinida"}</p>
+                      <p><strong>Estado:</strong> {escola.cidade?.estado ? escola.cidade.estado.sigla : "UF"}</p>
                       <p><strong>Turnos:</strong> {
                           Array.isArray(escola.turnos) 
                             ? escola.turnos.map(t => t.turno).join(", ") 
@@ -132,24 +119,26 @@ const Inicio = () => {
                 </div>
               ))}
             </div>
-            
-            <div className="pagination-controls">
-                <button 
-                    onClick={handlePrevPage} 
-                    disabled={page === 1}
-                    className="btn-page"
-                >
-                    Anterior
-                </button>
-                <span>{page} / {totalPages}</span>
-                <button 
-                    onClick={handleNextPage} 
-                    disabled={page === totalPages}
-                    className="btn-page"
-                >
-                    Próxima
-                </button>
-            </div>
+
+            {totalPages > 1 && (
+                <div className="pagination-controls">
+                    <button 
+                        onClick={handlePrevPage} 
+                        disabled={page === 1}
+                        className="btn-page"
+                    >
+                        Anterior
+                    </button>
+                    <span>Página {page} de {totalPages}</span>
+                    <button 
+                        onClick={handleNextPage} 
+                        disabled={page === totalPages}
+                        className="btn-page"
+                    >
+                        Próxima
+                    </button>
+                </div>
+            )}
           </>
         )}
       </main>

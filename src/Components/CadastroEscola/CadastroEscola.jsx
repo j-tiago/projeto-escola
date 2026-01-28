@@ -6,29 +6,54 @@ import "./CadastroEscola.css";
 const CadastroEscola = () => {
   const [nome, setNome] = useState("");
   const [diretor, setDiretor] = useState("");
-  const [cidadeId, setCidadeId] = useState(""); 
-  const [listaCidades, setListaCidades] = useState([]);
-  const [localizacao, setLocalizacao] = useState("1"); 
+  const [localizacao, setLocalizacao] = useState("1");
   const [turnos, setTurnos] = useState([]);
+  const [listaEstados, setListaEstados] = useState([]);
+  const [estadoId, setEstadoId] = useState(""); 
+  const [listaCidades, setListaCidades] = useState([]);
+  const [cidadeId, setCidadeId] = useState(""); 
   const navigate = useNavigate();
   const { id } = useParams();
 
+
   useEffect(() => {
-    const buscarCidades = async () => {
+    const buscarEstados = async () => {
       try {
         const token = localStorage.getItem("meu_token");
         if (!token) return;
 
-        const response = await axios.get("https://apiteste.mobieduca.me/api/cidades", {
+        const response = await axios.get("https://apiteste.mobieduca.me/api/estados", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setListaEstados(response.data);
+      } catch (error) {
+        console.error("Erro ao carregar estados", error);
+      }
+    };
+    buscarEstados();
+  }, []);
+
+  useEffect(() => {
+    if (!estadoId) {
+      setListaCidades([]);
+      return;
+    }
+
+    const buscarCidadesPorEstado = async () => {
+      try {
+        const token = localStorage.getItem("meu_token");
+        const response = await axios.get(`https://apiteste.mobieduca.me/api/cidades?estado_id=${estadoId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setListaCidades(response.data.data || response.data);
       } catch (error) {
-        console.error("Erro ao carregar cidades", error);
+        console.error("Erro ao carregar cidades do estado", error);
       }
     };
-    buscarCidades();
-  }, []);
+
+    buscarCidadesPorEstado();
+
+  }, [estadoId]);
 
   useEffect(() => {
     if (id) {
@@ -38,13 +63,21 @@ const CadastroEscola = () => {
           const response = await axios.get(`https://apiteste.mobieduca.me/api/escolas/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          
           const dados = response.data;
-          
           setNome(dados.nome);
           setDiretor(dados.diretor);
           setLocalizacao(dados.localizacao);
-          setCidadeId(dados.cidade_id);
+
+
+          if (dados.cidade) {
+            const idEstadoDaEscola = dados.cidade.estado_id;
+            setEstadoId(idEstadoDaEscola);
+            const cidadesResponse = await axios.get(`https://apiteste.mobieduca.me/api/cidades?estado_id=${idEstadoDaEscola}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setListaCidades(cidadesResponse.data.data || cidadesResponse.data);
+            setCidadeId(dados.cidade_id);
+          }
 
           if (dados.turnos && Array.isArray(dados.turnos)) {
             setTurnos(dados.turnos.map(t => t.turno));
@@ -52,7 +85,7 @@ const CadastroEscola = () => {
 
         } catch (error) {
           console.error("Erro ao carregar escola", error);
-          alert("Erro ao carregar dados para edição.");
+          alert("Erro ao carregar dados.");
           navigate("/home");
         }
       };
@@ -68,16 +101,25 @@ const CadastroEscola = () => {
     }
   };
 
+  const handleEstadoSelect = (e) => {
+    setEstadoId(e.target.value);
+    setCidadeId("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (turnos.length === 0) {
       alert("Selecione pelo menos um turno.");
       return;
     }
 
+    if (!cidadeId) {
+        alert("Selecione uma cidade.");
+        return;
+    }
+
     const mapaTurnos = { "Manhã": "M", "Tarde": "T", "Noite": "N", "Integral": "I" };
-    const turnosParaEnviar = turnos.map(t => mapaTurnos[t]);
+    const turnosParaEnviar = turnos.map(t => mapaTurnos[t] || t);
     const payload = {
       nome,
       diretor,
@@ -121,12 +163,16 @@ const CadastroEscola = () => {
           </div>
 
           <div className="form-group">
-            <label>Nome do Diretor <span className="required">*</span></label>
-            <input type="text" value={diretor} onChange={(e) => setDiretor(e.target.value)} required />
+            <label>Nome do Diretor</label>     
+            <input 
+              type="text" 
+              value={diretor} 
+              onChange={(e) => setDiretor(e.target.value)} 
+            />
           </div>
 
-          <div className="row">
-            <div className="form-group flex-1">
+          <div className="row" style={{ display: 'flex', gap: '20px' }}>
+            <div className="form-group" style={{ flex: 1 }}>
               <label>Localização <span className="required">*</span></label>
               <select value={localizacao} onChange={(e) => setLocalizacao(e.target.value)}>
                 <option value="1">Urbana</option>
@@ -134,13 +180,37 @@ const CadastroEscola = () => {
               </select>
             </div>
 
-            <div className="form-group flex-2">
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Estado <span className="required">*</span></label>
+              <select 
+                value={estadoId} 
+                onChange={handleEstadoSelect} 
+                required
+              >
+                <option value="">Selecione...</option>
+                {listaEstados.map((estado) => (
+                  <option key={estado.id} value={estado.id}>
+                    {estado.sigla} - {estado.descricao}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group" style={{ flex: 2 }}>
               <label>Cidade <span className="required">*</span></label>
-              <select value={cidadeId} onChange={(e) => setCidadeId(e.target.value)} required>
-                <option value="">Selecione uma cidade...</option>
+              <select 
+                value={cidadeId} 
+                onChange={(e) => setCidadeId(e.target.value)} 
+                required 
+                disabled={!estadoId}
+                style={{ backgroundColor: !estadoId ? '#f3f4f6' : '#fff' }}
+              >
+                <option value="">
+                    {estadoId ? "Selecione uma cidade..." : "Selecione um estado primeiro"}
+                </option>
                 {listaCidades.map((cidade) => (
                   <option key={cidade.id} value={cidade.id}>
-                    {cidade.descricao} - {cidade.estado ? cidade.estado.sigla : "UF"}
+                    {cidade.descricao}
                   </option>
                 ))}
               </select>
@@ -149,15 +219,17 @@ const CadastroEscola = () => {
 
           <div className="form-group">
             <label className="label-turnos">Turnos <span className="required">*</span></label>
+            
             <div className="checkbox-group">
                 {["Manhã", "Tarde", "Noite", "Integral"].map((opcao) => (
-                   <label key={opcao} className="checkbox-item">
+                  <label key={opcao} className="checkbox-item">
                       <input 
                           type="checkbox" 
                           checked={turnos.includes(opcao)}
                           onChange={() => handleTurnoChange(opcao)}
-                      /> {opcao}
-                   </label>
+                      /> 
+                      {opcao}
+                  </label>
                 ))}
             </div>
           </div>
