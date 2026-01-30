@@ -62,7 +62,11 @@ const Inicio = () => {
   };
 
   if (loading) {
-    return <div className="loading-container">Carregando dados...</div>;
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+      </div>
+    );
   }
 
   return (
