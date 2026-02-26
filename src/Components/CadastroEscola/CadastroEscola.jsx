@@ -1,97 +1,102 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import "./CadastroEscola.css";
 
+const fetchEstados = async () => {
+  const token = localStorage.getItem("meu_token");
+  const { data } = await axios.get("https://apiteste.mobieduca.me/api/estados", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return data;
+};
+
+const fetchCidades = async (estadoId) => {
+  const token = localStorage.getItem("meu_token");
+  const { data } = await axios.get(`https://apiteste.mobieduca.me/api/cidades?estado_id=${estadoId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return data.data || data;
+};
+
+const fetchEscolaDetalhes = async (id) => {
+  const token = localStorage.getItem("meu_token");
+  const { data } = await axios.get(`https://apiteste.mobieduca.me/api/escolas/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return data;
+};
+
 const CadastroEscola = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const queryClient = useQueryClient();
   const [nome, setNome] = useState("");
   const [diretor, setDiretor] = useState("");
   const [localizacao, setLocalizacao] = useState("1");
   const [turnos, setTurnos] = useState([]);
-  const [listaEstados, setListaEstados] = useState([]);
   const [estadoId, setEstadoId] = useState(""); 
-  const [listaCidades, setListaCidades] = useState([]);
   const [cidadeId, setCidadeId] = useState(""); 
-  const navigate = useNavigate();
-  const { id } = useParams();
+  const { data: listaEstados = [] } = useQuery({
+    queryKey: ['estados'],
+    queryFn: fetchEstados,
+    staleTime: Infinity, 
+  });
 
+  const { data: listaCidades = [] } = useQuery({
+    queryKey: ['cidades', estadoId],
+    queryFn: () => fetchCidades(estadoId),
+    enabled: !!estadoId,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: dadosEscola, isLoading: isLoadingDados } = useQuery({
+    queryKey: ['escola', id],
+    queryFn: () => fetchEscolaDetalhes(id),
+    enabled: !!id,
+    retry: false,
+  });
 
   useEffect(() => {
-    const buscarEstados = async () => {
-      try {
-        const token = localStorage.getItem("meu_token");
-        if (!token) return;
-
-        const response = await axios.get("https://apiteste.mobieduca.me/api/estados", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setListaEstados(response.data);
-      } catch (error) {
-        console.error("Erro ao carregar estados", error);
+    if (dadosEscola) {
+      setNome(dadosEscola.nome);
+      setDiretor(dadosEscola.diretor || "");
+      setLocalizacao(String(dadosEscola.localizacao));
+      
+      if (dadosEscola.cidade) {
+        setEstadoId(dadosEscola.cidade.estado_id);
+        setCidadeId(dadosEscola.cidade_id);
       }
-    };
-    buscarEstados();
-  }, []);
 
-  useEffect(() => {
-    if (!estadoId) {
-      setListaCidades([]);
-      return;
-    }
-
-    const buscarCidadesPorEstado = async () => {
-      try {
-        const token = localStorage.getItem("meu_token");
-        const response = await axios.get(`https://apiteste.mobieduca.me/api/cidades?estado_id=${estadoId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setListaCidades(response.data.data || response.data);
-      } catch (error) {
-        console.error("Erro ao carregar cidades do estado", error);
+      if (dadosEscola.turnos && Array.isArray(dadosEscola.turnos)) {
+        setTurnos(dadosEscola.turnos.map(t => t.turno));
       }
-    };
-
-    buscarCidadesPorEstado();
-
-  }, [estadoId]);
-
-  useEffect(() => {
-    if (id) {
-      const carregarDadosEscola = async () => {
-        try {
-          const token = localStorage.getItem("meu_token");
-          const response = await axios.get(`https://apiteste.mobieduca.me/api/escolas/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const dados = response.data;
-          setNome(dados.nome);
-          setDiretor(dados.diretor);
-          setLocalizacao(dados.localizacao);
-
-
-          if (dados.cidade) {
-            const idEstadoDaEscola = dados.cidade.estado_id;
-            setEstadoId(idEstadoDaEscola);
-            const cidadesResponse = await axios.get(`https://apiteste.mobieduca.me/api/cidades?estado_id=${idEstadoDaEscola}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setListaCidades(cidadesResponse.data.data || cidadesResponse.data);
-            setCidadeId(dados.cidade_id);
-          }
-
-          if (dados.turnos && Array.isArray(dados.turnos)) {
-            setTurnos(dados.turnos.map(t => t.turno));
-          }
-
-        } catch (error) {
-          console.error("Erro ao carregar escola", error);
-          alert("Erro ao carregar dados.");
-          navigate("/home");
-        }
-      };
-      carregarDadosEscola();
     }
-  }, [id, navigate]);
+  }, [dadosEscola]);
+
+  const mutation = useMutation({
+    mutationFn: async (novoCadastro) => {
+      const token = localStorage.getItem("meu_token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      if (id) {
+        return axios.patch(`https://apiteste.mobieduca.me/api/escolas/${id}`, novoCadastro, config);
+      } else {
+        return axios.post("https://apiteste.mobieduca.me/api/escolas", novoCadastro, config);
+      }
+    },
+    onSuccess: () => {
+
+      queryClient.invalidateQueries(['escolas']); 
+      alert(id ? "Escola atualizada!" : "Escola cadastrada!");
+      navigate("/home");
+    },
+    onError: (error) => {
+      console.error("Erro ao salvar", error);
+      alert("Erro: " + (error.response?.data?.message || "Falha ao processar"));
+    }
+  });
 
   const handleTurnoChange = (valor) => {
     if (turnos.includes(valor)) {
@@ -103,50 +108,30 @@ const CadastroEscola = () => {
 
   const handleEstadoSelect = (e) => {
     setEstadoId(e.target.value);
-    setCidadeId("");
+    setCidadeId(""); 
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (turnos.length === 0) {
-      alert("Selecione pelo menos um turno.");
-      return;
-    }
 
-    if (!cidadeId) {
-        alert("Selecione uma cidade.");
-        return;
-    }
+    if (turnos.length === 0) return alert("Selecione pelo menos um turno.");
+    if (!cidadeId) return alert("Selecione uma cidade.");
 
     const mapaTurnos = { "Manhã": "M", "Tarde": "T", "Noite": "N", "Integral": "I" };
     const turnosParaEnviar = turnos.map(t => mapaTurnos[t] || t);
-    const payload = {
+
+    mutation.mutate({
       nome,
       diretor,
       cidade_id: cidadeId,
       localizacao,
       turnos: turnosParaEnviar
-    };
-
-    try {
-      const token = localStorage.getItem("meu_token");
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-
-      if (id) {
-        await axios.patch(`https://apiteste.mobieduca.me/api/escolas/${id}`, payload, config);
-        alert("Escola atualizada com sucesso!");
-      } else {
-        await axios.post("https://apiteste.mobieduca.me/api/escolas", payload, config);
-        alert("Escola cadastrada com sucesso!");
-      }
-      
-      navigate("/home");
-
-    } catch (error) {
-      console.error("Erro ao salvar", error);
-      alert("Erro: " + (error.response?.data?.message || "Falha ao salvar"));
-    }
+    });
   };
+
+  if (isLoadingDados) {
+    return <div className="loading-container"><div className="spinner"></div></div>;
+  }
 
   return (
     <div className="cadastro-escola-container">
@@ -163,11 +148,12 @@ const CadastroEscola = () => {
           </div>
 
           <div className="form-group">
-            <label>Nome do Diretor</label>     
+            <label>Nome do Diretor</label>
             <input 
               type="text" 
               value={diretor} 
               onChange={(e) => setDiretor(e.target.value)} 
+              placeholder="Opcional"
             />
           </div>
 
@@ -182,11 +168,7 @@ const CadastroEscola = () => {
 
             <div className="form-group" style={{ flex: 1 }}>
               <label>Estado <span className="required">*</span></label>
-              <select 
-                value={estadoId} 
-                onChange={handleEstadoSelect} 
-                required
-              >
+              <select value={estadoId} onChange={handleEstadoSelect} required>
                 <option value="">Selecione...</option>
                 {listaEstados.map((estado) => (
                   <option key={estado.id} value={estado.id}>
@@ -202,12 +184,10 @@ const CadastroEscola = () => {
                 value={cidadeId} 
                 onChange={(e) => setCidadeId(e.target.value)} 
                 required 
-                disabled={!estadoId}
+                disabled={!estadoId} 
                 style={{ backgroundColor: !estadoId ? '#f3f4f6' : '#fff' }}
               >
-                <option value="">
-                    {estadoId ? "Selecione uma cidade..." : "Selecione um estado primeiro"}
-                </option>
+                <option value="">{estadoId ? "Selecione uma cidade..." : "Selecione um estado primeiro"}</option>
                 {listaCidades.map((cidade) => (
                   <option key={cidade.id} value={cidade.id}>
                     {cidade.descricao}
@@ -219,25 +199,29 @@ const CadastroEscola = () => {
 
           <div className="form-group">
             <label className="label-turnos">Turnos <span className="required">*</span></label>
-            
             <div className="checkbox-group">
                 {["Manhã", "Tarde", "Noite", "Integral"].map((opcao) => (
-                  <label key={opcao} className="checkbox-item">
+                   <label key={opcao} className="checkbox-item">
                       <input 
                           type="checkbox" 
                           checked={turnos.includes(opcao)}
                           onChange={() => handleTurnoChange(opcao)}
                       /> 
                       {opcao}
-                  </label>
+                   </label>
                 ))}
             </div>
           </div>
 
           <div className="form-actions">
             <button type="button" onClick={() => navigate("/home")} className="btn-cancelar">Cancelar</button>
-            <button type="submit" className="btn-salvar">
-              {id ? "Salvar Alterações" : "Salvar Escola"}
+            <button 
+                type="submit" 
+                className="btn-salvar" 
+                disabled={mutation.isPending} 
+                style={{ opacity: mutation.isPending ? 0.7 : 1, cursor: mutation.isPending ? 'not-allowed' : 'pointer' }}
+            >
+              {mutation.isPending ? "Salvando..." : (id ? "Salvar Alterações" : "Salvar Escola")}
             </button>
           </div>
         </form>

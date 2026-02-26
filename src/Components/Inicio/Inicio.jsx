@@ -1,70 +1,47 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { FaEdit } from "react-icons/fa";
 import "./Inicio.css";
 
-const Inicio = () => {
-  const [escolas, setEscolas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalRegistros, setTotalRegistros] = useState(0); 
-  
-  const navigate = useNavigate();
+const fetchEscolas = async (page) => {
+  const token = localStorage.getItem("meu_token");
+  const url = `https://apiteste.mobieduca.me/api/escolas?page=${page}`;
+  const { data } = await axios.get(url, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return data; 
+};
 
+const Inicio = () => {
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    isPlaceholderData 
+  } = useQuery({
+    queryKey: ['escolas', page],
+    queryFn: () => fetchEscolas(page),
+    placeholderData: (previousData) => previousData,
+    staleTime: 5000
+  });
+
+  const escolas = data?.data || [];
+  const totalPages = data?.last_page || 1;
+  const totalRegistros = data?.total || 0;
   const handleLogout = () => {
     localStorage.removeItem("meu_token");
     navigate("/");
   };
 
-  useEffect(() => {
-    const buscarDados = async () => {
-      const token = localStorage.getItem("meu_token");
-      
-      if (!token) {
-        navigate("/");
-        return;
-      }
-
-      try {
-        setLoading(true);
-
-        const url = `https://apiteste.mobieduca.me/api/escolas?page=${page}`;
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        const response = await axios.get(url, config);
-        console.log("Dados Reais da API:", response.data);
-        const listaReais = response.data.data || (Array.isArray(response.data) ? response.data : []);
-        setEscolas(listaReais);
-        setTotalPages(response.data.last_page || 1);
-        setTotalRegistros(response.data.total || listaReais.length);
-        
-        setLoading(false);
-
-      } catch (error) {
-        console.error("Erro ao buscar escolas:", error);
-        if (error.response && error.response.status === 401) {
-          handleLogout();
-        }
-        setLoading(false);
-      }
-    };
-
-    buscarDados();
-  }, [navigate, page]);
-
-  const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
-  };
-
-  const handleNextPage = () => {
-    if (page < totalPages) setPage(page + 1);
-  };
-
-  if (loading) {
+  if (isError) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
+      <div className="empty-state">
+        <p>Sessão expirada ou erro na conexão.</p>
+        <button onClick={handleLogout} className="btn-sair" style={{marginTop: 10}}>Fazer Login</button>
       </div>
     );
   }
@@ -73,33 +50,29 @@ const Inicio = () => {
     <div className="inicio-container">
       <header className="inicio-header">
         <h1>Sistema de Escolas</h1>
-
         <div className="header-buttons">
-          <Link to="/nova-escola" className="btn-novo">
-            + Nova Escola
-          </Link>
-          <button onClick={handleLogout} className="btn-sair">
-             Sair
-          </button>
+          <Link to="/nova-escola" className="btn-novo">+ Nova Escola</Link>
+          <button onClick={handleLogout} className="btn-sair">Sair</button>
         </div>
       </header>
 
       <main className="inicio-content">
         <div className="titulo-secao">
             <h2>Escolas Cadastradas</h2>
-            <p>Total encontradas: {totalRegistros}</p>
+            <p>Total: {totalRegistros}</p>
         </div>
         
-        {escolas.length === 0 ? (
+        {isLoading && !isPlaceholderData ? (
+           <div className="loading-container"><div className="spinner"></div></div>
+        ) : escolas.length === 0 ? (
           <div className="empty-state">
-            <p>Nenhuma escola encontrada no sistema.</p>
-            <small>Utilize o botão "+ Nova Escola" para começar.</small>
+            <p>Nenhuma escola encontrada.</p>
           </div>
         ) : (
           <>
             <div className="lista-grid">
               {escolas.map((escola) => (
-                <div key={escola.id} className="escola-card">
+                <div key={escola.id} className="escola-card" style={{ opacity: isPlaceholderData ? 0.6 : 1 }}>
                   <div className="card-header">
                       <h3>{escola.nome}</h3>
                       <button 
@@ -127,16 +100,16 @@ const Inicio = () => {
             {totalPages > 1 && (
                 <div className="pagination-controls">
                     <button 
-                        onClick={handlePrevPage} 
-                        disabled={page === 1}
+                        onClick={() => setPage(old => Math.max(old - 1, 1))} 
+                        disabled={page === 1} 
                         className="btn-page"
                     >
                         Anterior
                     </button>
-                    <span>Página {page} de {totalPages}</span>
+                    <span className="page-info">Página <strong>{page}</strong> de <strong>{totalPages}</strong></span>
                     <button 
-                        onClick={handleNextPage} 
-                        disabled={page === totalPages}
+                        onClick={() => setPage(old => (old < totalPages ? old + 1 : old))} 
+                        disabled={page === totalPages} 
                         className="btn-page"
                     >
                         Próxima
