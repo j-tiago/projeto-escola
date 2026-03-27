@@ -161,6 +161,7 @@
   cursor: pointer;
   font-weight: bold;
   font-size: 1rem;
+  transition: opacity 0.2s, background-color 0.2s;
 }
 
 .btn-salvar:hover {
@@ -175,11 +176,44 @@
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .btn-cancelar:hover {
     background-color: #f3f4f6;
     color: #374151;
+}
+
+/* =========================================
+   ESTILOS EXTRAÍDOS DO JSX (Substituem os styles inline)
+   ========================================= */
+
+/* Mantém o tamanho do card enquanto a bolinha do loading gira */
+.form-loading {
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Deixa o select de Cidade (ou qualquer campo) cinza quando bloqueado */
+.form-group select:disabled,
+.form-group input:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+/* Deixa o botão de salvar meio transparente e bloqueado ao clicar */
+.btn-salvar:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Evita que a cor mude ao passar o mouse quando estiver salvando */
+.btn-salvar:disabled:hover {
+  background-color: #009688; 
 }
 
 @media (max-width: 768px) {

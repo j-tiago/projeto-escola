@@ -137,7 +137,7 @@ const CadastroEscola = () => {
         </div>
 
         {isLoadingDados ? (
-          <div className="loading-container" style={{ minHeight: '300px' }}>
+          <div className="loading-container form-loading">
              <div className="spinner"></div>
           </div>
         ) : (
@@ -152,8 +152,8 @@ const CadastroEscola = () => {
               <input type="text" value={diretor} onChange={(e) => setDiretor(e.target.value)} placeholder="Opcional" />
             </div>
 
-            <div className="row" style={{ display: 'flex', gap: '20px' }}>
-              <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-row">
+              <div className="form-group flex-1">
                 <label>Localização <span className="required">*</span></label>
                 <select value={localizacao} onChange={(e) => setLocalizacao(e.target.value)}>
                   <option value="1">Urbana</option>
@@ -161,7 +161,7 @@ const CadastroEscola = () => {
                 </select>
               </div>
 
-              <div className="form-group" style={{ flex: 1 }}>
+              <div className="form-group flex-1">
                 <label>Estado <span className="required">*</span></label>
                 <select value={estadoId} onChange={handleEstadoSelect} required>
                   <option value="">Selecione...</option>
@@ -173,14 +173,13 @@ const CadastroEscola = () => {
                 </select>
               </div>
 
-              <div className="form-group" style={{ flex: 2 }}>
+              <div className="form-group flex-2">
                 <label>Cidade <span className="required">*</span></label>
                 <select 
                   value={cidadeId} 
                   onChange={(e) => setCidadeId(e.target.value)} 
                   required 
                   disabled={!estadoId} 
-                  style={{ backgroundColor: !estadoId ? '#f3f4f6' : '#fff' }}
                 >
                   <option value="">{estadoId ? "Selecione uma cidade..." : "Selecione um estado primeiro"}</option>
                   {listaCidades.map((cidade) => (
@@ -214,7 +213,6 @@ const CadastroEscola = () => {
                   type="submit" 
                   className="btn-salvar" 
                   disabled={isSubmitting} 
-                  style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
               >
                 {isSubmitting ? "Salvando..." : (id ? "Salvar Alterações" : "Salvar Escola")}
               </button>

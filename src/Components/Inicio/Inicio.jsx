@@ -7,13 +7,10 @@ import "./Inicio.css";
 const Inicio = () => {
   const [escolas, setEscolas] = useState([]);
   const [loading, setLoading] = useState(true);
-  
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRegistros, setTotalRegistros] = useState(0); 
-  
   const navigate = useNavigate();
-
   const handleLogout = () => {
     localStorage.removeItem("meu_token");
     navigate("/");
